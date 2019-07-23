@@ -1,0 +1,548 @@
+
+#-----Statement of Authorship----------------------------------------#
+#
+#  This is an individual assessment item.  By submitting this
+#  code I agree that it represents my own work.  I am aware of
+#  the University rule that a student must not act in a manner
+#  which constitutes academic dishonesty as stated and explained
+#  in QUT's Manual of Policies and Procedures, Section C/5.3
+#  "Academic Integrity" and Section E/2.1 "Student Code of Conduct".
+#
+#    Student no: n10355243
+#    Student name: Nihar Hasmukhbhai Rupareliya
+#
+#  NB: Files submitted without a completed copy of this statement
+#  will not be marked.  Submitted files will be subjected to
+#  software plagiarism analysis using the MoSS system
+#  (http://theory.stanford.edu/~aiken/moss/).  81023PT
+#
+#--------------------------------------------------------------------#
+
+
+
+#-----Assignment Description-----------------------------------------#
+#
+#  The Best, Then and Now
+#
+#  In this assignment you will combine your knowledge of HTMl/XML
+#  mark-up languages with your skills in Python scripting, pattern
+#  matching, and Graphical User Interface design to produce a useful
+#  application that allows the user to preview and print lists of
+#  top-ten rankings.  See the specification document accompanying this
+#  file for full details.
+#
+#--------------------------------------------------------------------#
+
+
+
+#-----Imported Functions---------------------------------------------#
+#
+# Below are various import statements for helpful functions.  You
+# should be able to complete this assignment using these
+# functions only.  Note that not all of these functions are
+# needed to successfully complete this assignment.
+# YOU MAY NOT USE ANY OTHER MODULES WITHOUT PRIOR APPROVAL.
+
+# The function for opening a web document given its URL.
+# (You WILL need to use this function in your solution,
+# either directly or via our "download" function.)
+from urllib.request import urlopen
+
+# Import the standard Tkinter functions. (You WILL need to use
+# these functions in your solution.)
+from tkinter import *
+
+# Functions for finding all occurrences of a pattern
+# defined via a regular expression, as well as
+# the "multiline" and "dotall" flags.  (You do NOT need to
+# use these functions in your solution, because the problem
+# can be solved with the string "find" function, but it will
+# be difficult to produce a concise and robust solution
+# without using regular expressions.)
+from re import findall, finditer, MULTILINE, DOTALL
+#_____________________________________________________________________________________________
+#I have imported this two function after asking to Donna
+from urllib.request import Request
+from tkinter import messagebox
+#______________________________________________________________________________________________
+#
+#--------------------------------------------------------------------#
+
+
+
+#-----Downloader Function--------------------------------------------#
+#
+# This is our function for downloading a web page's content and both
+# saving it on a local file and returning its source code
+# as a Unicode string. The function tries to produce a
+# meaningful error message if the attempt fails.  WARNING: This
+# function will silently overwrite the target file if it
+# already exists!  NB: You should change the filename extension to
+# "xhtml" when downloading an XML document.  (You do NOT need to use
+# this function in your solution if you choose to call "urlopen"
+# directly, but it is provided for your convenience.)
+#
+def download(url = 'https://m.imdb.com/chart/starmeter',
+             target_filename = 'download',
+             filename_extension = 'html'):
+
+    # Import an exception raised when a web server denies access
+    # to a document
+    from urllib.error import HTTPError
+
+    # Open the web document for reading
+    try:
+        web_page = urlopen(Request(url,headers={"User-Agent":"Chrome"})) 
+    except ValueError:
+        raise Exception("Download error - Cannot find document at URL '" + url + "'")
+    except HTTPError:
+        raise Exception("Download error - Access denied to document at URL '" + url + "'")
+    except:
+        raise Exception("Download error - Something went wrong when trying to download " + \
+                        "the document at URL '" + url + "'")
+
+    # Read its contents as a Unicode string
+    try:
+        web_page_contents = web_page.read().decode('UTF-8')
+    except UnicodeDecodeError:
+        raise Exception("Download error - Unable to decode document at URL '" + \
+                        url + "' as Unicode text")
+
+    # Write the contents to a local text file as Unicode
+    # characters (overwriting the file if it
+    # already exists!)
+    try:
+        text_file = open(target_filename + '.' + filename_extension,
+                         'w', encoding = 'UTF-8')
+        text_file.write(web_page_contents)
+        text_file.close()
+    except:
+        raise Exception("Download error - Unable to write to file '" + \
+                        target_file + "'")
+
+    # Return the downloaded document to the caller
+    return web_page_contents
+
+#
+#--------------------------------------------------------------------#
+
+
+
+#-----Student's Solution---------------------------------------------#
+#
+# Put your solution at the end of this file.
+#
+
+##### DEVELOP YOUR SOLUTION HERE #####
+#Iniatilizing the Tkinter window and giving it some title.
+the_window = Tk() 
+the_window.title("Best Then and Now")
+#This is just the html syntax which we are going to use during exporting our viewed files. It consists of complex structure CSS AND HTML Code..__________________________________________
+html_template = '''<!DOCTYPE html>
+<html>
+
+  <head>
+
+    <meta charset = 'UTF-8'>
+  
+    <title>***TITLE***</title>
+    <style>
+    body {
+                background: Dandelion;
+     }
+    table {
+                width: 800px;
+                margin: auto;
+                text-align: center;
+                table-layout: fixed;
+    }
+    table, tr, th, td {
+                padding: 20px;
+                color: white;
+                border: 1px solid #080808;
+                border-collapse:collapse;
+                font-size: 18px;
+                font-family:Arial;
+                background: linear-gradient(top, #3c3c3c 0%, #222222 100%);
+                background: -webkit-linear-gradient(top, #3c3c3c 0%, #222222 100%);
+  }
+  td:hover {
+                
+                background:purple;
+                
+  }
+        
+  </style>
+  </head>
+
+  <body bgcolor = "black">
+  <font color = "white">
+
+  <h1 align = "center">***TITLE***</h1>
+  <p align = "center">
+  <img src="IMAGE-URL">
+
+      </p>
+      
+  <table align = "center" style="width:50%" border = "1">
+  <tr>  
+              <th bgcolor = "green">Serial No.</th> 
+              <th bgcolor = "blue">Heading1</th> 
+              <th bgcolor = "grey">Heading2 </th> 
+              </tr>
+  '''
+#___________________________________________________________________
+#This is variable which takes values in Integer and records the button press
+exporting = IntVar()
+
+#___________________________________________________________________EXPORT_BUTTON_____________________________________________________________________#
+# PS. If I would like to, I would have made different functions and just called them inside the Export_button and Preview_button, But what my thinking right now is, I want to create a user friendly program. which if the user checks he can
+# Come to know how the program is actually designed and not asking the user to scroll up or down and see the other supporting function and again come to this function. Instead I written everthing in simpler language.
+def short_code():
+    if exporting.get() == 1:
+        html_template2 = html_template.replace("Heading1","Chart Name")
+        html_template3 = html_template2.replace("Heading2","Artist")
+        html_template4 = html_template3.replace("IMAGE-URL","https://cdn0.tnwcdn.com/wp-content/blogs.dir/1/files/2013/04/Spotify2.png")
+        html_template5 = html_template4.replace("***TITLE***","Hot Daily Spotify Charts")
+        #Creating a file with named Current Spotify charts exported and then finding the relevent information using findall
+        html_exporting = open("Current Spotify charts exported.html","w",encoding="UTF-8")
+        html_exporting.write(html_template5)
+        
+        url = "https://spotifycharts.com/viral/"
+        opening_url = urlopen(Request(url,headers={"User-Agent":"Chrome"})) 
+        decode = opening_url.read().decode("UTF-8")
+        opening_url.close()
+        #This is for finding the Album name.
+        finding = findall('<strong>(.*)</strong>',decode)
+        #we have to use remove as the first part of our content is outdated, which is not required.
+        finding.remove("outdated")
+        #This is to extract the date
+        modified_date = findall('[\d]{1,2}/[\d]{1,2}/[\d]{4}',decode)
+        #This is to extract the Artist of our song
+        origin = findall('<span>by(.*)</span>',decode)
+        #Loop to create table and insert the data inside it.
+        
+        
+def export1_button():
+    #This is for exporting spotify current page.
+    if exporting.get() == 1:
+        #Replacing the words which is provided in html template with the relevant names.
+        for rows in range(10):
+            html_exporting.write('''<tr>\
+                                    <td>''' + str(rows+1) + '''</td>
+                                    <td>'''+finding[rows]+'''</td>
+                                    <td>'''+ origin[rows] + '''</td>
+			</tr>''')
+        
+        html_exporting.write('''</table>''')
+        html_exporting.write('''<p align = "center">		This document generated updated on '''+str(modified_date[0])+''' <br>
+	  <a href = "https://spotifycharts.com/viral/"> Go to the page :D </a> </p>''')
+        html_exporting.close()
+        
+        
+												
+        
+    #This is for exporting spotify previous page.
+    elif exporting.get() == 2:
+        #Replacing the words which is provided in html template with the relevant names.
+        html_template2 = html_template.replace("Heading1","Chart Name")
+        html_template3 = html_template2.replace("Heading2","Artist")
+        html_template4 = html_template3.replace("IMAGE-URL","https://www.askifa.ng/wp-content/uploads/2018/10/Spotify.jpg")
+        html_template5 = html_template4.replace("***TITLE***","Hot Daily Spotify Charts")
+        #Opening the old downloaded file, reading and closing it later
+        opening_downloaded = open("Spotify Charts.html")
+        reading = opening_downloaded.read()
+        opening_downloaded.close()
+        #Creating a file with named old Spotify charts exported and then finding the relevent information using findall
+        html_exporting = open("Previous Spotify exported.html","w",encoding = "UTF-8")
+        html_exporting.write(html_template5)
+         #This is for finding the Album name.
+        finding = findall('<strong>(.*)</strong>',reading)
+         #we have to use remove as the first part of our content is outdated, which is not required.
+        finding.remove("outdated")
+        #This is to extract the date
+        downloaded_date = findall('[\d]{1,2}/[\d]{1,2}/[\d]{4}',reading)
+        #This is to extract the Artist of our song
+        origin = findall('<span>by(.*)</span>',reading)
+        #Loop to create table and insert the data inside it.
+        for rows in range(10):
+            html_exporting.write('''<tr>\
+                                    <td>''' + str(rows+1) + '''</td>
+                                    <td>'''+finding[rows]+'''</td>
+                                    <td>'''+ origin[rows] + '''</td>
+			</tr>''')
+        
+        html_exporting.write('''</table>''')
+        html_exporting.write('''<p align = "center">		This document generated updated on '''+str(downloaded_date[0])+''' <br>
+	  <a href = "https://spotifycharts.com/viral/"> Go to the page :D </a> </p>''')
+        html_exporting.close()
+        
+    elif exporting.get() == 3:
+        #Replacing the words which is provided in html template with the relevant names.
+        html_template2 = html_template.replace("Heading1","Chess Player Name")
+        html_template3 = html_template2.replace("Heading2","Score")
+        html_template4 = html_template3.replace("IMAGE-URL","https://i0.wp.com/8subjects.com/wp-content/uploads/2017/07/Chess.jpeg?resize=600%2C315")
+        html_template5 = html_template4.replace("***TITLE***","Daily Live Chess")
+         #Creating a file with named Current Chess Score exported and then finding the relevent information using findall
+        html_exporting = open("Current Chess Score exported.html","w",encoding="UTF-8")
+        html_exporting.write(html_template5)
+        url = "https://2700chess.com/"
+        opening_url = urlopen(url) 
+        decode = opening_url.read().decode("UTF-8")
+        opening_url.close()
+         #This is to extract the player name of our gmae
+        finding = findall('<span class="hidden searched">(.*)</span>',decode)
+        #This is to extract the modified date of our game
+        modified_date = findall('</span>(.*)</strong>',decode)
+        #This is to extract the Score of our game
+        origin = findall('<strong.*>(.*)</strong>',decode)
+        
+        first_element = origin[0]
+        
+        #To get every alternative element as our list contains some garbage element at every alternative stage
+        origin.remove(first_element)
+        
+     
+												
+        data = finding[::2]
+        #Loop to create table and insert the data inside it.
+        for rows in range(10):
+            html_exporting.write('''<tr>\
+                                    <td>''' + str(rows+1) + '''</td>                          
+                                    <td>'''+data[rows]+'''</td>
+                                    <td> '''+ origin[rows] +'''</td>
+
+
+			</tr>''')
+        
+        html_exporting.write('''</table>''')
+        html_exporting.write('''<p align = "center">		This document generated updated on '''+str(modified_date[0])+''' <br>
+	  <a href = "https://2700chess.com/"> Go to the page :D </a> </p>''')
+        html_exporting.close()
+
+    elif exporting.get() == 4:
+            #Replacing the words which is provided in html template with the relevant names.
+            html_template2 = html_template.replace("Heading1","Chess Player Name")
+            html_template3 = html_template2.replace("Heading2","Score")
+            html_template4 = html_template3.replace("IMAGE-URL","https://images.chesscomfiles.com/uploads/v1/article/17623.87bb05cd.630x354o.cb5899315c4c.jpeg")
+            html_template5 = html_template4.replace("***TITLE***","Daily Live Chess")
+             #Opening the old downloaded file, reading and closing it later
+            opening_downloaded = open("Chess Game.html")
+            reading = opening_downloaded.read()
+            opening_downloaded.close()
+             #Creating a file with named Previous Chess score exported and  then finding the relevent information using findall
+            html_exporting = open("Previous Chess score exported.html","w",encoding = "UTF-8")
+            html_exporting.write(html_template5)
+            #This is to extract the player name of our chess gane
+            finding = findall('<span class="hidden searched">(.*)</span>',reading)
+             #This is to extract the downloaded or previous date name of our chess
+            downloaded_date = findall('</span>(.*)</strong>',reading)
+             #This is to extract the score of our chess game.
+            origin = findall('<strong.*>(.*)</strong>',reading)
+            first_element = origin[0]
+            origin.remove(first_element)
+            #To get every alternative element as our list contains some garbage element at every alternative stage
+            data = finding[::2]
+            #Loop to create table and insert the data inside it.
+            for rows in range(10):
+                html_exporting.write('''<tr>\
+                                        <td>''' + str(rows+1) + '''</td>
+                                        <td>'''+data[rows]+'''</td>
+                                        <td>'''+ origin[rows] + '''</td>
+                            </tr>''')
+            
+            html_exporting.write('''</table>''')
+            html_exporting.write('''<p align = "center">		This document generated updated on '''+str(downloaded_date[0])+''' <br>
+              <a href = "https://2700chess.com/"> Go to the page :D </a> </p>''')
+            html_exporting.close()
+            export_button["state"] = "disabled"
+            
+
+        
+            
+        
+     
+        
+
+#This function is for preview button, It makes the preview button fully functionable.        
+def preview1_button():
+    #Turning off the export button before pressing the preview button
+    export_button["state"] = "active"
+    new_window = Toplevel()
+    new_window.title("Previewing you the best")
+#______________________________________________________________________________________________    
+   
+    #This two code are for Chess Games.
+    #Opening the old document and downloading, reading and then closing it and then finding the necessary information.
+    if exporting.get() ==4:
+        opening_downloaded = open("Chess Game.html")
+        reading = opening_downloaded.read()
+        opening_downloaded.close()
+        baby_img = PhotoImage(file="chess_tkinter.png")
+        babies_label = Label(new_window,image=baby_img,borderwidth=2,relief="solid")    
+        babies_label.place(x=50,y=50)
+        #This is for exporting the downlaoded chess game  player name name
+        finding = findall('<span class="hidden searched">(.*)</span>',reading)
+        #This is for exporting the chess game downloaded date 
+        downloaded_date = findall('</span>(.*)</strong>',reading)
+        #This is for exporting the chess game downloaded title 
+        downloaded_title = findall('<title>(.*)</title>',reading)
+
+    #Going to the URL and then finding the specific information that we want.
+    elif exporting.get() ==3:        
+        url = "https://2700chess.com/"
+        opening_url = urlopen(url)
+        decode = opening_url.read().decode("UTF-8")
+        opening_url.close()
+        baby_img = PhotoImage(file="chess_tkinter2.png")
+        babies_label = Label(new_window,image=baby_img,borderwidth=2,relief="solid")    
+        babies_label.place(x=50,y=50)
+        #This is for exporting the current chess game player name 
+        finding = findall('<span class="hidden searched">(.*)</span>',decode)
+        #This is for exporting thecurrent  chessgame modified  date 
+        modified_date = findall('</span>(.*)</strong>',decode)
+        #This is for exporting the current chess game  title 
+        seen_title = findall('<title>(.*)</title>',decode)
+        
+        
+##Spotify__________________________________________________________________________________________
+    ### This two code are for Spotify Charts
+    #Going to the URL and then finding the specific information that we want.
+    elif exporting.get() ==1:        
+        url = "https://spotifycharts.com/viral/"
+        opening_url = urlopen(Request(url,headers={"User-Agent":"Chrome"}))  
+        decode = opening_url.read().decode("UTF-8")
+        opening_url.close()
+        baby_img = PhotoImage(file="Spotify_tkinter2.png")
+        babies_label = Label(new_window,image=baby_img,borderwidth=2,relief="solid")    
+        babies_label.place(x=35,y=70)
+        #This is for exporting the current spotify  title 
+        finding = findall('<strong>(.*)</strong>',decode)
+        finding.remove("outdated")
+        #This is for exporting the spotify modified title 
+        modified_date = findall('[\d]{1,2}/[\d]{1,2}/[\d]{4}',decode)
+        #This is for exporting the current spotify downloaded title 
+        seen_title = findall('<title>(.*)</title>',decode)
+        
+    # This is for the previous charts
+    elif exporting.get() ==2:
+        #Opening the old document and downloading, reading and then closing it and then finding the necessary information.
+        opening_downloaded = open("Spotify Charts.html")
+        reading = opening_downloaded.read()
+        opening_downloaded.close()
+        baby_img = PhotoImage(file="Spotify_tkinter.png")
+        babies_label = Label(new_window,image=baby_img,borderwidth=2,relief="solid")    
+        babies_label.place(x=50,y=80)
+        #This is for exporting thedownloaded spotify songs 
+        finding = findall('<strong>(.*)</strong>',reading)
+        #Removing the first garbage element..
+        finding.remove("outdated")
+        #This is for exporting the downloaded date 
+        downloaded_date = findall('[\d]{1,2}/[\d]{1,2}/[\d]{4}',reading)
+        #This is for exporting the downloaded title 
+        downloaded_title = findall('<title>(.*)</title>',reading)
+
+#__________________________________________________________________________________________
+    # To display error If none of the buttons are selected. 
+    elif exporting.get() == 0:
+        
+        return messagebox.showinfo("Selection Error","Please select any of the four radio buttons!!!")
+
+ 
+        
+
+#________________________________________________________________________________________________     
+            
+        
+    #This is for writing creating the area  for our extracted data.    
+    namebox = Text(new_window,width=45,font="PeachPuff 15 bold")
+    namebox.place(x = 500,y=0)
+  
+   #Extracting the title from the internet and pasting it on our new_window
+    if exporting.get() == 1 or exporting.get() == 3:
+        titlebox = Label(new_window,text = "Latest "+seen_title[0],font = "Courier 13 bold")
+        if exporting.get() == 3:
+            titlebox.place(x=30 ,y=20)    
+        else:
+            titlebox.place(x=95 ,y=20)
+   #Extracting the title of downloaded(Previous) and print it on Text box     
+    elif exporting.get() == 2 or exporting.get() == 4:
+        titlebox = Label(new_window,text = " Recent "+downloaded_title[0] ,font = "Courier 13 bold")
+        if exporting.get() == 4:
+            titlebox.place(x=45,y=20)            
+        else:          
+            titlebox.place(x=110,y=20)
+    number =1
+   #Printing our data into the preview page.
+    #This is for spotify chart
+    if exporting.get() == 1 or exporting.get() == 2:   
+        
+        for data in finding:
+            #Putting limit on data
+            if number == 11:
+                 break
+            else:
+                #Inserting the data into the Textbox
+                namebox.insert(END,str(number)+". "+data+" \n")          
+                number+=1
+    #This is for Live chess
+    elif exporting.get() == 3 or exporting.get() ==4:
+        #We also had country at every alternate stage in the list, so this code prints out every alternate element
+        for data in finding[::2]:
+            if number == 11:
+                break
+            else:
+                namebox.insert(END,str(number)+". "+data+" \n")          
+                number+=1
+                
+
+    
+     #Writing the dates of updated or downloaded into new tkinter window      
+    if exporting.get() == 1 or exporting.get() == 3:
+        #This is for inserting the updated dates into the new_window
+        namebox.insert(END,"\nThe page was updated on: "+str(modified_date[0]))
+    elif exporting.get() == 2 or exporting.get() == 4:
+        #This is for inserting the old dates i.e. downloaded date into the new_window
+        namebox.insert(END,"\nThe page was downloaded on: "+str(downloaded_date[0]))
+    
+        
+    #Geometry for our new window
+    new_window.geometry("1000x430")
+                    
+    #Putting the new window into the loop
+    new_window.mainloop()
+
+#___________________________________________________________________________________________________________________________________________#
+    
+#This is main code to make our initial tkinter window.
+Img = PhotoImage(file ="TheBest.png")
+
+label = Label(the_window, image = Img,borderwidth = 2,relief = "solid")
+label.place(x = 5,y = 100)
+#Labeling our takinter window
+text = Label(the_window,text = "Top Rated Things", font = "Courier 30 bold")
+text.place(x = 65,y = 10)
+#Creating the preview button
+preview_button = Button(text = "Preview",width=10,font = "bold 15",command = preview1_button)
+preview_button.place(x=60,y=350)
+#Creating the export button
+export_button = Button(text = "Export",width=10,font="bold 15", state = "disable",command = export1_button)
+export_button.place(x=300,y=350)
+#This framebox hold the two buttons for Live Chess
+framebox1 = LabelFrame(the_window,text = "Live Chess \n Ratings",font="Verdana 12 bold",labelanchor="n",bd = 4)
+framebox1.place(x = 330,y = 200)
+#This framebox hols the two button for Spotify Charts
+framebox2 = LabelFrame(the_window, text = "Spotify Charts",font="Verdana 12 bold",labelanchor="n",bd = 4)
+framebox2.place(x = 315,y = 100)
+
+#Creating the radio buttons for Previous and Current for both of categories.
+but1 = Radiobutton(framebox2,text = "Current",value = 1,font = "25",variable = exporting)
+but1.pack()
+but2 = Radiobutton(framebox2,text = "Previous",value = 2,font = "25",variable = exporting)
+but2.pack()
+but3 = Radiobutton(framebox1,text = "Current",variable = exporting,value = 3, font = "25")
+but3.pack()
+but4 = Radiobutton(framebox1,text = "Previous",value = 4,font = "25",variable = exporting)
+but4.pack()
+the_window.geometry("510x430")
+
